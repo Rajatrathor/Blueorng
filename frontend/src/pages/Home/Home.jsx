@@ -61,7 +61,7 @@ const Home = () => {
             <h1 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 uppercase">New Collection</h1>
             <p className="text-lg md:text-xl mb-8 font-light tracking-wide">Discover styles curated for you</p>
             <Link to="/category/all" className="bg-white text-black px-8 py-3 uppercase tracking-widest text-sm font-bold hover:bg-gray-200 transition">
-              Shop Nowww
+              Shop Now
             </Link>
           </div>
         </div>
