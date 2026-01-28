@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 const routes = require('./routes');
 const openapi = require('./openapi.json');
+const sendEmail = require('./utils/email');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
 
 // Routes
 app.use('/api', routes);
