@@ -1,4 +1,5 @@
 const prisma = require('../../config/db');
+const razorpay = require('../../config/razorpay');
 const { successResponse, errorResponse } = require('../../utils/response');
 const sendEmail = require('../../utils/email');
 
@@ -39,14 +40,26 @@ const createOrder = async (req, res, next) => {
     }
 
     // Create Order Transaction
-    const order = await prisma.$transaction(async (prisma) => {
+    const order = await prisma.$transaction(async (prismaTx) => {
+      // If online payment via Razorpay, create a Razorpay order first
+      let razorpayOrderId = null;
+      if (paymentMethod === 'RAZORPAY') {
+        const rpOrder = await razorpay.orders.create({
+          amount: Math.round(Number(totalAmount) * 100),
+          currency: 'INR',
+          receipt: `order_${userId}_${Date.now()}`,
+        });
+        razorpayOrderId = rpOrder.id;
+      }
+
       // 1. Create Order
-      const newOrder = await prisma.order.create({
+      const newOrder = await prismaTx.order.create({
         data: {
           userId,
           totalAmount,
-          status: paymentMethod && paymentMethod !== 'COD' ? 'PAID' : 'PENDING',
+          status: 'PENDING',
           paymentMethod,
+          razorpayOrderId,
           fullName,
           phone,
           addressLine1,
@@ -60,7 +73,7 @@ const createOrder = async (req, res, next) => {
 
       // 2. Create Order Items and Update Stock
       for (const item of cart.items) {
-        await prisma.orderItem.create({
+        await prismaTx.orderItem.create({
           data: {
             orderId: newOrder.id,
             productId: item.productId,
@@ -78,34 +91,50 @@ const createOrder = async (req, res, next) => {
       }
 
       // 3. Clear Cart
-      await prisma.cartItem.deleteMany({
-        where: { cartId: cart.id },
-      });
+      // Clear cart only for COD
+      if (paymentMethod === 'COD') {
+        await prismaTx.cartItem.deleteMany({
+          where: { cartId: cart.id },
+        });
+      }
 
       return newOrder;
     });
 
-    // Send Confirmation Email
-    const message = `
-      <h1>Thank you for your order!</h1>
-      <p>Hi ${userName},</p>
-      <p>We have received your order #${order.id}.</p>
-      <p>Total Amount: $${order.totalAmount}</p>
-      <p>We will notify you once it's shipped.</p>
-    `;
-
-    try {
-      await sendEmail({
-        email: userEmail,
-        subject: 'Order Confirmation - BluOrng Inspired Store',
-        message: `Thank you for your order #${order.id}. Total: $${order.totalAmount}`,
-        html: message
-      });
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
+    // If COD, send confirmation email and return success
+    if (paymentMethod === 'COD') {
+      const message = `
+        <h1>Thank you for your order!</h1>
+        <p>Hi ${userName},</p>
+        <p>We have received your order #${order.id}.</p>
+        <p>Total Amount: ₹${order.totalAmount}</p>
+        <p>We will notify you once it's shipped.</p>
+      `;
+      try {
+        await sendEmail({
+          email: userEmail,
+          subject: 'Order Confirmation',
+          message: `Thank you for your order #${order.id}. Total: ₹${order.totalAmount}`,
+          html: message
+        });
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+      }
+      return successResponse(res, order, 'Order created successfully', 201);
     }
 
-    successResponse(res, order, 'Order created successfully', 201);
+    // For Razorpay, return payload to initiate payment on client
+    if (order.razorpayOrderId) {
+      return successResponse(res, {
+        orderId: order.id,
+        amount: order.totalAmount,
+        currency: 'INR',
+        razorpayOrderId: order.razorpayOrderId,
+        keyId: process.env.RAZORPAY_KEY_ID,
+      }, 'Razorpay order created', 201);
+    }
+
+    successResponse(res, order, 'Order created', 201);
   } catch (error) {
     next(error);
   }
@@ -144,6 +173,7 @@ const getOrders = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // @desc    Update order status
 // @route   PUT /api/orders/:id

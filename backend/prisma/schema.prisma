@@ -121,7 +121,10 @@ model Order {
   status      OrderStatus @default(PENDING)
   totalAmount Decimal
   // Payment Info
-  paymentMethod String?
+  paymentMethod String? 
+  razorpayOrderId String? @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
   // Shipping / Address Info
   fullName       String?
   phone          String?
