@@ -93,7 +93,7 @@ const Profile = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold uppercase tracking-tight mb-2">My Profile</h1>
-      <p className="mb-8 text-gray-600">Welcome back, {user?.name}</p>
+      <p className="mb-8 text-gray-600">Welcome back, {user?.name || user?.email}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
         <div>

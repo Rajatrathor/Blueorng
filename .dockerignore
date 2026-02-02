@@ -1,0 +1,26 @@
+# --- general ---
+.git
+.gitignore
+README.md
+*.log
+
+# --- env ---
+.env
+.env.*
+!.env.example
+
+# --- node ---
+**/node_modules
+**/.npm
+**/.cache
+
+# --- builds ---
+**/dist
+**/build
+**/.next
+
+# --- prisma ---
+**/.prisma
+
+# --- OS ---
+.DS_Store

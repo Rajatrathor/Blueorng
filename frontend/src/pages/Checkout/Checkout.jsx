@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateOrderMutation } from '../../features/orders/ordersApi';
+import { useCreateOrderMutation, useVerifyPaymentMutation } from '../../features/orders/ordersApi';
 import { useGetCartQuery } from '../../features/cart/cartApi';
 import { useSelector } from 'react-redux';
+
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { data: cart } = useGetCartQuery(undefined, { skip: !isAuthenticated, refetchOnMountOrArgChange: true });
   const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const [verifyPayment] = useVerifyPaymentMutation();
+
 
   const [form, setForm] = useState({
     fullName: user?.name || '',
@@ -57,17 +60,84 @@ const Checkout = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const loadScript = (src) =>
+    new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await createOrder(form).unwrap();
-      alert('Order placed successfully!');
-      navigate('/profile');
+      // 🟢 COD FLOW
+      if (form.paymentMethod === 'COD') {
+        await createOrder(form).unwrap();
+        alert('Order placed successfully!');
+        navigate('/profile');
+        return;
+      }
+
+
+
+      // 🔵 RAZORPAY FLOW
+      const ok = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+      if (!ok) {
+        alert('Razorpay SDK failed to load');
+        return;
+      }
+
+      // ✅ CREATE FULL ORDER FIRST (address + items saved)
+      const resp = await createOrder({
+        ...form,
+        paymentMethod: 'RAZORPAY',
+      }).unwrap();
+
+      console.log('RESP', resp); // debug once
+
+      const payment = resp.data; // ✅ THIS IS THE FIX
+
+      const options = {
+        key: payment.keyId,
+        amount: payment.amount, // already in paise
+        currency: payment.currency,
+        order_id: payment.razorpayOrderId,
+
+        name: 'BluOrng Inspired Store',
+        description: `Order #${payment.orderId}`,
+
+        handler: async (response) => {
+          await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          }).unwrap();
+
+          navigate('/profile');
+        },
+
+        modal: {
+          ondismiss: () => {
+            console.log('Razorpay closed by user');
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+
+
+
     } catch (err) {
       console.error(err);
-      alert(err?.data?.message || 'Failed to place order');
+      alert(err?.data?.message || 'Payment failed');
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
@@ -219,26 +289,17 @@ const Checkout = () => {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="UPI"
-                    checked={form.paymentMethod === 'UPI'}
+                    value="RAZORPAY"
+                    checked={form.paymentMethod === 'RAZORPAY'}
                     onChange={handleChange}
                   />
-                  <span>UPI (Simulated)</span>
+                  <span>Razorpay (Card/UPI/Netbanking)</span>
                 </label>
-                <label className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="CARD"
-                    checked={form.paymentMethod === 'CARD'}
-                    onChange={handleChange}
-                  />
-                  <span>Card (Simulated)</span>
-                </label>
+
               </div>
               {form.paymentMethod !== 'COD' && (
                 <div className="mt-3 text-xs text-gray-500">
-                  Online payment is simulated for demo. Order will be marked as PAID.
+                  Online payment uses Razorpay. Your order updates after payment.
                 </div>
               )}
             </div>

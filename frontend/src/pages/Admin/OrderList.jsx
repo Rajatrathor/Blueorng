@@ -86,6 +86,13 @@ const OrderList = () => {
                 </td>
               </tr>
             ))}
+            {(!orders || orders.length === 0) && (
+              <tr>
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  No orders found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

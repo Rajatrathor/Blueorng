@@ -90,6 +90,13 @@ const ProductList = () => {
                 </td>
               </tr>
             ))}
+            {(!products || products.length === 0) && (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  No products found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
