@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Build & Deploy to EC2
 
 on:
   push:
@@ -6,19 +6,41 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Frontend build check
-        run: |
-          cd frontend
-          npm ci
-          npm run build
+      # 2️⃣ Login to GitHub Container Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      # 3️⃣ Build & Push Backend Image
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/rajatrathor/blueorng-backend:latest
+
+      # 4️⃣ Build & Push Frontend Image
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/rajatrathor/blueorng-frontend:latest
+
+      # 5️⃣ Deploy on EC2 (NO BUILD HERE)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -31,6 +53,8 @@ jobs:
           script: |
             cd ~/Blueorng
             git pull origin main
-            docker compose down
-            docker compose up -d --build
+
+            docker compose pull
+            docker compose up -d
+
             docker exec clothingbrand-backend npx prisma migrate deploy

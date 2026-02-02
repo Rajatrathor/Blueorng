@@ -1,3 +1,50 @@
+# version: "3.9"
+
+# services:
+#   db:
+#     image: postgres:16
+#     container_name: clothingbrand-db
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_DB: clothing_brand
+#       POSTGRES_USER: rajatrathore
+#       POSTGRES_PASSWORD: postgres
+#     volumes:
+#       - db_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U rajatrathore -d clothing_brand"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 10
+
+#   backend:
+#     build: ./backend
+#     container_name: clothingbrand-backend
+#     restart: unless-stopped
+#     env_file:
+#       - ./backend/.env
+#     environment:
+#       DATABASE_URL: postgresql://rajatrathore:postgres@db:5432/clothing_brand
+#       NODE_ENV: development
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     ports:
+#       - "8000:5000"   # ✅ THIS IS THE IMPORTANT FIX
+#       - "5555:5555"
+#   frontend:
+#     build: ./frontend
+#     container_name: clothingbrand-frontend
+#     restart: unless-stopped
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+
+# volumes:
+#   db_data:
+
+
 version: "3.9"
 
 services:
@@ -18,22 +65,23 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    image: ghcr.io/rajatrathor/blueorng-backend:latest
     container_name: clothingbrand-backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
       DATABASE_URL: postgresql://rajatrathore:postgres@db:5432/clothing_brand
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8000:5000"   # ✅ THIS IS THE IMPORTANT FIX
+      - "8000:5000"
       - "5555:5555"
+
   frontend:
-    build: ./frontend
+    image: ghcr.io/rajatrathor/blueorng-frontend:latest
     container_name: clothingbrand-frontend
     restart: unless-stopped
     ports:
