@@ -22,6 +22,21 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 120s
+        script: |
+           cd ~/Blueorng
+           git pull origin main
+
+            docker compose down
+            docker compose up -d --build
+
+             docker exec clothingbrand-backend npx prisma migrate deploy
+
+        uses: appleboy/ssh-action@v1.0.3
+        with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
