@@ -15,15 +15,22 @@ const Home = () => {
 
 
   const heroImages = [
-    // Dark editorial fashion (Bluorng core vibe)
-    'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=2000&q=80',
+    // Luxury dark studio portrait
+    "https://images.unsplash.com/photo-1520974735194-6c5eab39c8b9?auto=format&fit=crop&w=2000&q=80",
 
-    // High-fashion studio / luxury feel
-    'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=2000&q=80',
+    // High-end streetwear editorial
+    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80",
 
-    // Moody streetwear / avant-garde
-    'https://images.unsplash.com/photo-1520975661595-6453be3f7070?auto=format&fit=crop&w=2000&q=80',
+    // Moody fashion with shadows
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=80",
+
+    // Minimal dark aesthetic
+    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=2000&q=80",
+
+    // Urban night fashion
+    "https://images.unsplash.com/photo-1520975867597-0f5b6d36a39f?auto=format&fit=crop&w=2000&q=80",
   ];
+
 
 
 
