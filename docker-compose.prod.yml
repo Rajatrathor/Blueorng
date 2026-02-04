@@ -1,25 +1,39 @@
-version: "3.9"
-
 services:
+
   db:
     image: postgres:16
+    container_name: app-db
+    restart: always
+    environment:
+      POSTGRES_DB: clothingbrand
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - db_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    image: ghcr.io/rajatrathor/blueorng-backend:latest
+    image: rajatrathor554/clothingbrand-backend:latest
+    container_name: backend
+    restart: always
     env_file:
       - ./backend/.env.production
-    restart: always
+    ports:
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
 
   frontend:
-    image: ghcr.io/rajatrathor/blueorng-frontend:latest
+    image: rajatrathor554/clothingbrand-frontend:latest
+    container_name: frontend
+    restart: always
     ports:
       - "80:80"
-    restart: always
     depends_on:
       - backend
 
