@@ -180,6 +180,16 @@ const sendOtp = async (req, res, next) => {
     // Send OTP via Email (User said "otp will go to the register email")
     const message = `Your OTP for login/password reset is: ${otp}. It is valid for 10 minutes.`;
 
+    // Send SMS if mobile is present
+    if (user.mobile) {
+      // Don't await strictly if you want parallel, or await to ensure delivery.
+      // Usually SMS can be fire-and-forget or parallel.
+      sendSMS({
+        phone: user.mobile,
+        message: `Your OTP is ${otp}. Valid for 10 min.`
+      });
+    }
+
     try {
       // Log OTP for development/demo purposes
       console.log(`DEV OTP for ${user.email}: ${otp}`);

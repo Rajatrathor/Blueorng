@@ -1,0 +1,50 @@
+
+services:
+  db:
+    image: postgres:16
+    container_name: clothingbrand-db-dev
+    environment:
+      POSTGRES_DB: clothing_brand
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clothing_brand"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: clothingbrand-backend-dev
+    command: npm run dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env.development
+    depends_on:
+      - db
+
+  frontend:
+    image: node:20
+    container_name: clothingbrand-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env.development
+    depends_on:
+      - backend
+
+volumes:
+  db_data_dev:

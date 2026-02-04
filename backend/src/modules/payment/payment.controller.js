@@ -2,6 +2,7 @@ const razorpay = require('../../config/razorpay');
 const prisma = require('../../config/db');
 const sendEmail = require('../../utils/email');
 const crypto = require('crypto');
+const { sendSMS } = require('../../utils/sms');
 
 // CREATE ORDER
 
@@ -46,6 +47,12 @@ exports.verifyPayment = async (req, res, next) => {
         if (cart) {
             await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
         }
+        console.log("📩 SMS TRIGGERED FOR:", order.phone);
+
+        sendSMS({
+            phone: order.phone,
+            message: `Payment successful! Your order #${order.id} is confirmed. Thank you for shopping with BluOrng.`,
+        }).catch(() => { });
 
         try {
             await sendEmail({

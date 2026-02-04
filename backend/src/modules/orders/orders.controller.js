@@ -2,6 +2,7 @@ const prisma = require('../../config/db');
 const razorpay = require('../../config/razorpay');
 const { successResponse, errorResponse } = require('../../utils/response');
 const sendEmail = require('../../utils/email');
+const { sendSMS } = require('../../utils/sms');
 
 
 // const createOrder = async (req, res, next) => {
@@ -229,6 +230,12 @@ const createOrder = async (req, res, next) => {
 
     // 5️⃣ COD → done
     if (paymentMethod === 'COD') {
+      console.log("📩 SMS TRIGGERED FOR:", order.phone);
+      sendSMS({
+        phone,
+        message: `Hi ${fullName}, your order #${order.id} has been placed successfully. Thank you for shopping with BluOrng.`,
+      }).catch(() => { });
+
       return successResponse(res, order, 'Order placed successfully', 201);
     }
 
