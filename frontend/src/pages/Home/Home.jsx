@@ -15,8 +15,7 @@ const Home = () => {
 
 
   const heroImages = [
-    // Luxury dark studio portrait
-    "https://images.unsplash.com/photo-1520974735194-6c5eab39c8b9?auto=format&fit=crop&w=2000&q=80",
+
 
     // High-end streetwear editorial
     "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80",
@@ -27,8 +26,6 @@ const Home = () => {
     // Minimal dark aesthetic
     "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=2000&q=80",
 
-    // Urban night fashion
-    "https://images.unsplash.com/photo-1520975867597-0f5b6d36a39f?auto=format&fit=crop&w=2000&q=80",
   ];
 
 
