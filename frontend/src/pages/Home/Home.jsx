@@ -15,8 +15,6 @@ const Home = () => {
 
 
   const heroImages = [
-
-
     // High-end streetwear editorial
     "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80",
 
@@ -27,8 +25,6 @@ const Home = () => {
     "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=2000&q=80",
 
   ];
-
-
 
 
 

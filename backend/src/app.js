@@ -15,7 +15,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.post('api/payment/webhook', razorpayWebhook);
+app.post('/api/payment/webhook', razorpayWebhook);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -23,7 +23,13 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-
+app.get('/health', (req, res) => {
+  return res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Routes
 app.use('/api', routes);

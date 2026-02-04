@@ -12,6 +12,9 @@ if (missingEnv.length) {
 
 const PORT = process.env.PORT || 5000;
 
+
+
+
 app.listen(PORT, () => {
   console.log(`Server runningg in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
