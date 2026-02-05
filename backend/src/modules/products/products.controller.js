@@ -1,4 +1,5 @@
 const prisma = require('../../config/db');
+const { default: redis } = require('../../config/redis');
 const { successResponse, errorResponse } = require('../../utils/response');
 
 // @desc    Get all products
@@ -6,6 +7,20 @@ const { successResponse, errorResponse } = require('../../utils/response');
 // @access  Public
 const getProducts = async (req, res, next) => {
   try {
+
+    const cachedProducts = await redis.get("products");
+
+    if (cachedProducts) {
+      return successResponse(
+        res,
+        JSON.parse(cachedProducts),
+        "Products fetched",
+        200,
+        { source: "cache" }
+      );
+    }
+
+
     const { category, search, sort, active, minPrice, maxPrice, color, size, sizes, availability } = req.query;
 
     let where = {};
@@ -69,6 +84,9 @@ const getProducts = async (req, res, next) => {
       orderBy,
       include: { category: true },
     });
+
+    await redis.set("products", JSON.stringify(products), "EX", 60);
+
 
     successResponse(res, products);
   } catch (error) {
