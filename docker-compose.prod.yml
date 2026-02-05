@@ -98,13 +98,13 @@ services:
       - "3001:3001"
     volumes:
       - uptime_kuma_data:/app/data
-
-    redis:
+  redis:
      image: redis:7
      container_name: redis
      restart: always
      ports:
       - "6379:6379"
+    
 
 
 volumes:
