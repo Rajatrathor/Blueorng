@@ -6,95 +6,128 @@ const { successResponse, errorResponse } = require('../../utils/response');
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
+// const getProducts = async (req, res, next) => {
+//   try {
+
+//     const cachedProducts = await redis.get("products");
+
+//     if (cachedProducts !== null) {
+//       console.log("CACHE HIT");
+//       return successResponse(
+//         res,
+//         JSON.parse(cachedProducts),
+//         "Products fetched",
+//         200,
+//         { source: "cache" }
+//       );
+//     }
+
+
+//     const { category, search, sort, active, minPrice, maxPrice, color, size, sizes, availability } = req.query;
+
+//     let where = {};
+
+//     if (category) {
+//       // Assuming category is passed as ID or Name. Let's assume ID for simplicity or join.
+//       // If name, we need to find category id first or do a relation filter.
+//       // Let's support categoryId query param directly for simplicity, or look up by name.
+//       // If query is ?category=Shirts, we look up category name.
+//       const categoryRecord = await prisma.category.findUnique({
+//         where: { name: category }
+//       });
+//       if (categoryRecord) {
+//         where.categoryId = categoryRecord.id;
+//       }
+//     }
+
+//     if (search) {
+//       where.OR = [
+//         { name: { contains: search, mode: 'insensitive' } },
+//         { description: { contains: search, mode: 'insensitive' } },
+//       ];
+//     }
+
+//     if (typeof active !== 'undefined') {
+//       where.active = active === 'true';
+//     }
+
+//     if (minPrice || maxPrice) {
+//       where.price = {};
+//       if (minPrice) where.price.gte = parseFloat(minPrice);
+//       if (maxPrice) where.price.lte = parseFloat(maxPrice);
+//     }
+
+//     if (color) {
+//       where.color = { equals: color, mode: 'insensitive' };
+//     }
+
+//     // Size filter: support 'size=M' or 'sizes=M,L'
+//     const sizeList = sizes ? String(sizes).split(',').map(s => s.trim()).filter(Boolean) : (size ? [String(size).trim()] : []);
+//     if (sizeList.length > 0) {
+//       where.sizes = { hasSome: sizeList };
+//     }
+
+//     if (availability) {
+//       if (availability === 'in_stock') {
+//         where.stock = { gt: 0 };
+//       } else if (availability === 'out_of_stock') {
+//         where.stock = { equals: 0 };
+//       }
+//     }
+
+//     let orderBy = {};
+//     if (sort === 'price_asc') orderBy.price = 'asc';
+//     if (sort === 'price_desc') orderBy.price = 'desc';
+//     if (sort === 'newest') orderBy.createdAt = 'desc';
+//     if (sort === 'featured') orderBy.createdAt = 'desc';
+
+//     const products = await prisma.product.findMany({
+//       where,
+//       orderBy,
+//       include: { category: true },
+//     });
+
+//     await redis.set("products", JSON.stringify(products), "EX", 60);
+
+
+//     successResponse(res, products);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getProducts = async (req, res, next) => {
   try {
 
-    const cachedProducts = await redis.get("products");
+    console.log("GET /products called");
 
-    if (cachedProducts !== null) {
+    const cached = await redis.get("products");
+
+    console.log("Cached value:", cached ? "YES" : "NO");
+
+    if (cached) {
       console.log("CACHE HIT");
-      return successResponse(
-        res,
-        JSON.parse(cachedProducts),
-        "Products fetched",
-        200,
-        { source: "cache" }
-      );
+      return successResponse(res, JSON.parse(cached));
     }
 
-
-    const { category, search, sort, active, minPrice, maxPrice, color, size, sizes, availability } = req.query;
-
-    let where = {};
-
-    if (category) {
-      // Assuming category is passed as ID or Name. Let's assume ID for simplicity or join.
-      // If name, we need to find category id first or do a relation filter.
-      // Let's support categoryId query param directly for simplicity, or look up by name.
-      // If query is ?category=Shirts, we look up category name.
-      const categoryRecord = await prisma.category.findUnique({
-        where: { name: category }
-      });
-      if (categoryRecord) {
-        where.categoryId = categoryRecord.id;
-      }
-    }
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (typeof active !== 'undefined') {
-      where.active = active === 'true';
-    }
-
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = parseFloat(minPrice);
-      if (maxPrice) where.price.lte = parseFloat(maxPrice);
-    }
-
-    if (color) {
-      where.color = { equals: color, mode: 'insensitive' };
-    }
-
-    // Size filter: support 'size=M' or 'sizes=M,L'
-    const sizeList = sizes ? String(sizes).split(',').map(s => s.trim()).filter(Boolean) : (size ? [String(size).trim()] : []);
-    if (sizeList.length > 0) {
-      where.sizes = { hasSome: sizeList };
-    }
-
-    if (availability) {
-      if (availability === 'in_stock') {
-        where.stock = { gt: 0 };
-      } else if (availability === 'out_of_stock') {
-        where.stock = { equals: 0 };
-      }
-    }
-
-    let orderBy = {};
-    if (sort === 'price_asc') orderBy.price = 'asc';
-    if (sort === 'price_desc') orderBy.price = 'desc';
-    if (sort === 'newest') orderBy.createdAt = 'desc';
-    if (sort === 'featured') orderBy.createdAt = 'desc';
+    console.log("Fetching from DB");
 
     const products = await prisma.product.findMany({
-      where,
-      orderBy,
-      include: { category: true },
+      include: { category: true }
     });
 
-    await redis.set("products", JSON.stringify(products), "EX", 60);
+    await redis.set("products", JSON.stringify(products), "EX", 120);
 
+    console.log("CACHE SAVED");
 
-    successResponse(res, products);
-  } catch (error) {
-    next(error);
+    return successResponse(res, products);
+
+  } catch (err) {
+    console.error("Products error:", err);
+    next(err);
   }
 };
+
 
 // @desc    Get single product
 // @route   GET /api/products/:id
