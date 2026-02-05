@@ -1,5 +1,6 @@
 const prisma = require('../../config/db');
-const { default: redis } = require('../../config/redis');
+const redis = require('../../config/redis');
+
 const { successResponse, errorResponse } = require('../../utils/response');
 
 // @desc    Get all products
