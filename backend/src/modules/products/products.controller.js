@@ -11,7 +11,7 @@ const getProducts = async (req, res, next) => {
 
     const cachedProducts = await redis.get("products");
 
-    if (cachedProducts) {
+    if (cachedProducts !== null) {
       console.log("CACHE HIT");
       return successResponse(
         res,
