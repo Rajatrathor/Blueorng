@@ -3,6 +3,7 @@ const razorpay = require('../../config/razorpay');
 const { successResponse, errorResponse } = require('../../utils/response');
 const sendEmail = require('../../utils/email');
 const { sendSMS } = require('../../utils/sms');
+const { notifyUser } = require('../notifications/notification.service');
 
 
 // const createOrder = async (req, res, next) => {
@@ -228,6 +229,14 @@ const createOrder = async (req, res, next) => {
       return newOrder;
     });
 
+    await notifyUser({
+      userId: order.userId,
+      title: "Order Placed",
+      body: `Your order #${order.id} has been placed`,
+      type: "ORDER",
+    });
+
+
     // 5️⃣ COD → done
     if (paymentMethod === 'COD') {
       console.log("📩 SMS TRIGGERED FOR:", order.phone);
@@ -292,6 +301,14 @@ const updateOrderStatus = async (req, res, next) => {
       where: { id: parseInt(req.params.id) },
       data: { status },
     });
+
+    await notifyUser({
+      userId: order.userId,
+      title: "Order Update",
+      body: `Your order #${order.id} status changed to ${status}`,
+      type: "ORDER",
+    });
+
     successResponse(res, order, 'Order status updated');
   } catch (error) {
     next(error);

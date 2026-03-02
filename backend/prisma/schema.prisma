@@ -59,6 +59,9 @@ model User {
   orders    Order[]
   cart      Cart?
   returns   ReturnRequest[]
+
+   notifications Notification[]
+  deviceTokens  DeviceToken[] 
 }
 
 model Category {
@@ -172,3 +175,40 @@ model ContactMessage {
   message   String
   createdAt DateTime @default(now())
 }
+
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  RETURN
+  ADMIN
+  SYSTEM
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  title     String
+  body      String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+}
+
+model DeviceToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  device    String?   // WEB, ANDROID, IOS
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+

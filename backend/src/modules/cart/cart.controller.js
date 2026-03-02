@@ -8,10 +8,10 @@ const getCart = async (req, res, next) => {
   try {
     let cart = await prisma.cart.findUnique({
       where: { userId: req.user.id },
-      include: { 
+      include: {
         items: {
           include: { product: true }
-        } 
+        }
       },
     });
 
@@ -70,13 +70,14 @@ const addToCart = async (req, res, next) => {
       });
     }
 
+
     // Return updated cart
     const updatedCart = await prisma.cart.findUnique({
       where: { id: cart.id },
-      include: { 
+      include: {
         items: {
           include: { product: true }
-        } 
+        }
       },
     });
 
@@ -92,11 +93,11 @@ const addToCart = async (req, res, next) => {
 const updateCartItem = async (req, res, next) => {
   try {
     const { quantity } = req.body;
-    
+
     if (quantity < 1) {
-        // If quantity is 0 or less, maybe remove it? Or just error.
-        // Let's assume remove if 0, or just error.
-        return errorResponse(res, 'Quantity must be at least 1', 400);
+      // If quantity is 0 or less, maybe remove it? Or just error.
+      // Let's assume remove if 0, or just error.
+      return errorResponse(res, 'Quantity must be at least 1', 400);
     }
 
     await prisma.cartItem.update({
@@ -106,10 +107,10 @@ const updateCartItem = async (req, res, next) => {
 
     const cart = await prisma.cart.findUnique({
       where: { userId: req.user.id },
-      include: { 
+      include: {
         items: {
           include: { product: true }
-        } 
+        }
       },
     });
 
@@ -130,10 +131,10 @@ const removeFromCart = async (req, res, next) => {
 
     const cart = await prisma.cart.findUnique({
       where: { userId: req.user.id },
-      include: { 
+      include: {
         items: {
           include: { product: true }
-        } 
+        }
       },
     });
 
